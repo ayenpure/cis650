@@ -1,0 +1,8 @@
+
+SENSOR = SENSOR[5],
+SENSOR[i:0..10] = (level[j:0..10] ->
+                   ( when(j < 2) low -> SENSOR[j]
+                    | when(j > 8) high ->SENSOR[j]
+                    | when(j <=8 && j >=2) normal -> SENSOR[j]
+                   )
+                 ).
