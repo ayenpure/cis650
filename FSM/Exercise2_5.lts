@@ -7,12 +7,11 @@ DRINKS[p:ACCEPT] = ( when(p>=15)  vend -> VEND[p-15]
                      | when (p <= 10 ) in[20] -> DRINKS[p+20]
                      | exit -> EXIT[p]
                    ),
-VEND[p:ACCEPT] = ( when (p>=15) vend -> DRINKS[p-15]
+VEND[p:ACCEPT] = ( continue -> DRINKS[p]
                    | exit -> EXIT[p]
                  ),
 EXIT[p:ACCEPT] = ( when(p == 0) reset -> DRINKS[0]
-                   | change[p] -> ( when(p >= 20) change[20] -> EXIT[p-20]
-                                           | when(p >= 10 && p < 20) change[10] -> EXIT[p - 10]
-                                           | when(p >= 5 && p < 10) change[5] -> EXIT[p - 5]
-                                         )
+                   | when (p >= 20) change[20] -> EXIT[p - 20]
+                   | when (p >= 10 ) change[10] -> EXIT[p - 10]
+                   | when (p >= 5) change[5] -> EXIT[p -5]  
                  ).
