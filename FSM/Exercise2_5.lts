@@ -1,13 +1,18 @@
-range T 0..30
+range ACCEPT = 0..30
 
 DRINKS = DRINKS[0],
-DRINKS[c:T] = (when(c >= 15) deliver -> CHANGE[c-15]
-               | in[5] -> DRINKS[c+5]
-               | in[10] -> DRINKS[c+10]
-               | in[20] -> DRINKS[c+20]
-              ),
-CHANGE[c:0..15] = (when(i >= 5 && i < 10) out[5] -> CHANGE[i-5]
-                   | when(i >= 10 && i < 20) out[10] -> CHANGE[i-10]
-                   | when(i >= 20) out[20] -> CHANGE[i-20] 
-                   | when(i == 0) reset -> DRINKS[0]
-                  ).
+DRINKS[p:ACCEPT] = ( when(p>=15)  vend -> VEND[p-15]
+                     | when(p <= 10) in[5] -> DRINKS[p+5]
+                     | when (p <= 10) in[10] -> DRINKS[p+10]
+                     | when (p <= 10 ) in[20] -> DRINKS[p+20]
+                     | exit -> EXIT[p]
+                   ),
+VEND[p:ACCEPT] = ( when (p>=15) vend -> DRINKS[p-15]
+                   | exit -> EXIT[p]
+                 ),
+EXIT[p:ACCEPT] = ( when(p == 0) reset -> DRINKS[0]
+                   | change[p] -> ( when(p >= 20) change[20] -> EXIT[p-20]
+                                           | when(p >= 10 && p < 20) change[10] -> EXIT[p - 10]
+                                           | when(p >= 5 && p < 10) change[5] -> EXIT[p - 5]
+                                         )
+                 ).
