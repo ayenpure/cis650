@@ -1,17 +1,23 @@
-range ACCEPT = 0..30
+const N = 3
+range LIMIT = 0..N
+set ACCEPT = {[0],[5],[10],[15],[20],[25],[30]}
 
-DRINKS = DRINKS[0],
-DRINKS[p:ACCEPT] = ( when(p>=15)  vend -> VEND[p-15]
-                     | when(p <= 10) in[5] -> DRINKS[p+5]
-                     | when (p <= 10) in[10] -> DRINKS[p+10]
-                     | when (p <= 10 ) in[20] -> DRINKS[p+20]
-                     | exit -> EXIT[p]
-                   ),
-VEND[p:ACCEPT] = ( continue -> DRINKS[p]
-                   | exit -> EXIT[p]
-                 ),
-EXIT[p:ACCEPT] = ( when(p == 0) reset -> DRINKS[0]
-                   | when (p >= 20) change[20] -> EXIT[p - 20]
-                   | when (p >= 10 ) change[10] -> EXIT[p - 10]
-                   | when (p >= 5) change[5] -> EXIT[p -5]  
-                 ).
+DRINKS = DRINKS[0][N],
+DRINKS[p:ACCEPT][i:LIMIT] = ( when(p>=15 && i > 0)  vend -> CHANGE[p-15][i-1]
+
+                              | when(p <= 10) in[5] ->  if(i > 0) then DRINKS[p+5][i]
+                                                        else CHANGE[p+5][i]
+                                                        
+                              | when (p <= 10) in[10] -> if(i > 0) then DRINKS[p+10][i]
+                                                         else CHANGE[p+10][i]
+
+                              | when (p <= 10) in[20] -> if(i > 0) then DRINKS[p+20][i]
+                                                         else CHANGE[p+20][i]
+
+                              | exit -> CHANGE[p][i]
+                      ),
+CHANGE[p:ACCEPT][i:LIMIT] = ( when(p == 0) reset -> DRINKS[0][i]
+                              | when (p >= 20) change[20] -> CHANGE[p - 20][i]
+                              | when (p >= 10 ) change[10] -> CHANGE[p - 10][i]
+                              | when (p >= 5) change[5] -> CHANGE[p - 5][i]
+                            ).
