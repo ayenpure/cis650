@@ -1,0 +1,11 @@
+const M = 3
+
+TURNSTILE  = (passanger -> TURNSTILE).
+
+CONTROL = CONTROL[0],
+CONTROL[p:0..M] = ( when(p < M) passanger -> CONROL[p+1]
+                    | when(p==M) depart -> CONTROL[0]).
+
+CAR = (depart -> riding -> CAR).
+
+||ROLLER = (TURNSTILE || CONTROL || CAR).
