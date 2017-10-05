@@ -49,8 +49,7 @@ def compute_center(point, all_centers):
 #
 
 # Function to calculate the centroid given the clusterId and all points.
-def getCentroid(clusterId, clusters):
-    cluster = clusters.get(clusterId)
+def getCentroid(cluster):
     compactCluster = zip(*cluster)
     centroid =  [sum(component) / len(component) for component in compactCluster]
     return centroid
@@ -59,10 +58,9 @@ def getCentroid(clusterId, clusters):
 # and the all the points.
 def recalculateCenters(pool, clusterIds, mapping, items):
     clusters = {}
-    for i,j in zip (mapping, items):
+    for i,j in zip(mapping, items):
         clusters.setdefault(i, []).append(j)
-    partialGetCentroids = partial(getCentroid, clusters = clusters)
-    centroids = pool.map(partialGetCentroids, clusterIds)
+    centroids = pool.map(getCentroid, clusters.values())
     return {key:value for key,value in zip(clusterIds,centroids)}
 
 def compareCenters(centersPair):
