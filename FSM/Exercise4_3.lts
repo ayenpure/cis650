@@ -1,0 +1,34 @@
+//ex 4.3
+
+const False = 0
+const True = 1
+range Bool = False..True
+
+SEAT = SEAT[False],
+
+SEAT[v:Bool] = (reserve -> SEAT[True] |
+                query[v] -> SEAT[v]).
+
+range Seats = 0..1
+
+||SEATS = (seat[Seats]:SEAT).
+
+LOCK = (acquire -> release -> LOCK).
+
+BROKENLOCK = ({acquire,release} -> BROKENLOCK).
+
+TERMINAL = (choose[s:Seats] -> acquire -> seat[s].query[x:Bool] ->
+            if !x then (seat[s].reserve -> release -> TERMINAL)
+            else (release -> TERMINAL)
+            ).
+
+set Terminals = {a,b}
+
+||CONCERT = (Terminals:TERMINAL || Terminals::SEATS || Terminals::LOCK).
+
+||BROKEN_CONCERT = (Terminals:TERMINAL || Terminals::SEATS || Terminals::BROKENLOCK).
+
+
+
+
+
