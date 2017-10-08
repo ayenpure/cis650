@@ -38,8 +38,6 @@ assert MUTEX = []!(WEST_ENGAGE && EAST_ENGAGE)
 */
 
 ||GARDEN = (east:CHEATER || west:TURNSTILE || display:DISPLAY
-            || {east,west,display}::value:LOCKVAR)
-            /{go /{east,west}.go,
-              end/{east,west}.end}.
+            || {east,west,display}::value:LOCKVAR)/{go /{east,west}.go,end/{east,west}.end}\{east.value.acquire, east.value.release}.
 
 assert VALID = [](west.value.acquire -> (!(east.value.read[i:T] || east.value.write[i:T]) U west.value.release))

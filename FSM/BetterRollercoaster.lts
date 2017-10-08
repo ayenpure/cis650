@@ -1,0 +1,14 @@
+const M = 3
+set Cars = {a,b,c}
+
+TURNSTILE = (passanger -> TURNSTILE).
+
+CONTROL = CONTROL[0],
+CONTROL[p:0..M] = ( when(p < M) passanger -> CONTROL[p+1]
+                    | when(p == M) pick_up -> CONTROL[0]
+                  ).
+
+CAR = (pick_up -> riding_and_bonding -> arrive -> form_social_group -> CAR).
+
+||ROLLER = (TURNSTILE || Cars::CONTROL || Cars:CAR)/{passanger /Cars.passanger}.
+
