@@ -4,9 +4,7 @@
 
 const N = 4
 range T = 0..N
-set VarAlpha = {value.{read[T],write[T],
-		       acquire,release}
-	       }
+set VarAlpha = {value.{read[T],write[T],acquire,release}}
 
 VAR = VAR[0],
 VAR[u:T] = (read[u]->VAR[u] | write[v:T]->VAR[v]).
@@ -29,14 +27,15 @@ CHEATINCREMENT = (value.read[x:T]->value.write[x+1]
                   ->CHEATRUN
                  )+VarAlpha.
 
-||GARDEN = (east:CHEATER || west:TURNSTILE || display:DISPLAY                 
-            || {east,west,display}::value:LOCKVAR)                              
-            /{go /{east,west}.go,                                               
-              end/{east,west}.end}.
-
 DISPLAY =(value.read[T]->DISPLAY)+{value.{write[T],acquire,release}}.
+
+||GARDEN = (east:CHEATER || west:TURNSTILE || display:DISPLAY
+            || {east,west,display}::value:LOCKVAR)
+            /{go /{east,west}.go, end/{east,west}.end}
+            \{display.value.write[i:T], display.value.acquire, display.value.release}.
 
 fluent WEST = <west.value.read[i:T], west.value.write[i:T]>
 fluent EAST = <east.value.read[i:T], east.value.write[i:T]>
 fluent INVALIDWRITE = <east.value.write[N+1], west.value.write[N+1]>
+
 assert TEST = []!(WEST && EAST && !INVALIDWRITE)
