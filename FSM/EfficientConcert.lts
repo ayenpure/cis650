@@ -19,7 +19,7 @@ LOCK = (acquire -> release -> LOCK).
 
 TERMINAL = (choose[s:Seats] -> seat[s].acquire -> seat[s].query[x:Bool] ->
             if !x then (seat[s].reserve -> seat[s].release -> TERMINAL)
-            else (release -> TERMINAL)
+            else (seat[s].release -> TERMINAL)
             ).
 
 set Terminals = {a,b}
