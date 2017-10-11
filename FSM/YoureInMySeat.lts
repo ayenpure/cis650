@@ -5,15 +5,20 @@
 const False = 0
 const True = 1
 range Bool = False..True
+range Seats = 0..1
 
 SEAT = SEAT[False],
 
 SEAT[v:Bool] = (reserve -> SEAT[True] |
                 query[v] -> SEAT[v]).
 
-range Seats = 0..1
-
 ||SEATS = (seat[Seats]:SEAT).
+
+PROTECTEDSEAT = PROTECTEDSEAT[0],
+PROTECTEDSEAT[v:Bool] = (reserve -> if (v != True) then PROTECTEDSEAT[True] else ERROR |
+                 query[v] -> PROTECTEDSEAT[v]).
+
+||PROTECTEDSEATS = (seat[Seats]:PROTECTEDSEAT).
 
 LOCK = (acquire -> release -> LOCK).
 
@@ -32,9 +37,7 @@ set Terminals = {a,b}
 
 ||UNSAFECONCERT = (a:CHEATER  || b:TERMINAL || Terminals::SEATS || Terminals::LOCK).
 
-TEST = ({a.seat[s:Seats].reserve, b.seat[s:Seats].reserve} -> ERROR).
-
-||PATCHEDCONCERT = (UNSAFECONCERT || TEST).
+||PATCHEDCONCERT = (a:CHEATER  || b:TERMINAL || Terminals::PROTECTEDSEATS || Terminals::LOCK).
 
 fluent ACQUIRE_LOCK_a = <a.acquire, a.release>
 fluent ACQUIRE_LOCK_b = <b.acquire, b.release>
@@ -48,5 +51,4 @@ assert DOUBLE_BOOK_a = []!(b.seat[s:Seats].reserve && <> a.seat[s:Seats].reserve
 assert DOUBLE_BOOK_b = []!(a.seat[s:Seats].reserve && <> b.seat[s:Seats].reserve)
 
 assert TWO_IN = []!(ACQUIRE_LOCK_a && ACQUIRE_LOCK_b)
-
 
