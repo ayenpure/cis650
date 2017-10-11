@@ -34,8 +34,13 @@ DISPLAY =(value.read[T]->DISPLAY)+{value.{write[T],acquire,release}}.
             /{go /{east,west}.go, end/{east,west}.end}
             \{display.value.write[i:T], display.value.acquire, display.value.release}.
 
+fluent ACQUIRE_LOCK_EAST = <east.value.acquire, east.value.release>
+fluent ACQUIRE_LOCK_WEST = <west.value.acquire, west.value.release>
+
+assert DONTSKIP_EAST = [](!east.value.write[i:T] U ACQUIRE_LOCK_EAST)
+assert DONTSKIP_WEST = [](!west.value.write[i:T] U ACQUIRE_LOCK_WEST)
+
 fluent WEST = <west.value.read[i:T], west.value.write[i:T]>
 fluent EAST = <east.value.read[i:T], east.value.write[i:T]>
 fluent INVALIDWRITE = <east.value.write[N+1], west.value.write[N+1]>
-
-assert TEST = []!(WEST && EAST && !INVALIDWRITE)
+assert PROBABLYDIRTYREAD = []!(WEST && EAST && !INVALIDWRITE)
