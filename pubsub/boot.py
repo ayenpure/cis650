@@ -1,8 +1,11 @@
-import time, socket, sys
+import time, socket, sys, mraa, os
 from datetime import datetime as dt
 import paho.mqtt.client as paho
 import signal
 
+led = mraa.Gpio(2)
+led.dir(mraa.DIR_OUT)
+ 
 MY_NAME = 'Edison03'
 
 time.sleep(10)
@@ -49,6 +52,11 @@ mqtt_client.on_log = on_log
 
 mqtt_client.loop_start()
 while True:
-  mqtt_message = "%s " %(ip_addr) + '==== '+ MY_NAME	        
+  response = os.system("ping -c 1 www.google.com");
+  if(response == 0):
+    led.write(0)
+  else:
+    led.write(1)
+  mqtt_message = "%s " %(ip_addr) + '==== '+ MY_NAME 
   mqtt_client.publish(mqtt_topic, mqtt_message)
   time.sleep(3)
