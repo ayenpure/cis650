@@ -57,7 +57,10 @@ while True:
     led.write(0)
   else:
     led.write(1)
-    print("****Try to quit****");
+    print("****Quitting service****");
+    mqtt_client.disconnect()
+    mqtt_client.loop_stop()
+    sys.exit(1)
   mqtt_message = "%s " %(ip_addr) + '==== '+ MY_NAME 
   mqtt_client.publish(mqtt_topic, mqtt_message)
   time.sleep(3)
