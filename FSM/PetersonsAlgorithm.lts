@@ -1,0 +1,42 @@
+const True = 1
+const False = 0
+range Card = 1..2
+range Bool = False..True
+
+set BoolActions = {setTrue,setFalse,[False],[True]}
+
+BOOLVAR = VAL[False],
+VAL[v:Bool] = ( setTrue -> VAL[True]
+                | setFalse -> VAL[False]
+                | [v] -> VAL[v]
+              ).
+||FLAGS = (flag1:BOOLVAR||flag2:BOOLVAR).
+
+set CardActions = {set1,set2,[1],[2]}
+CARDVAR = VAL[1],
+VAL[i:Card] = ( set1 -> VAL[1]
+                | set2 -> VAL[2]
+                | [i] -> VAL[i]
+              ).
+
+||VARS = (flag1:BOOLVAR || flag2:BOOLVAR || turn:CARDVAR).
+
+NEIGHBOR1 = (flag1.setTrue -> turn.set2 -> TEST),
+TEST = ( flag2[b:Bool]-> turn[c:Card] -> if (b && c==2) 
+                         then TEST
+                         else (enter -> exit -> flag1.setFalse -> NEIGHBOR1)
+       )+{{flag1, flag2}.BoolActions, turn.CardActions}.
+
+NEIGHBOR2 = (flag2.setTrue -> turn.set1 -> TEST),
+TEST = ( flag1[b:Bool]-> turn[c:Card] -> if (b && c==1) 
+                         then TEST
+                         else (enter -> exit -> flag2.setFalse -> NEIGHBOR2)
+       )+{{flag1, flag2}.BoolActions, turn.CardActions}.
+
+||FIELD = (n1:NEIGHBOR1 || n2:NEIGHBOR2 || {n1,n2}::VARS).
+
+||GREEDY = FIELD << {{n1,n2}.{flag1,flag2}.setTrue}.
+
+||GREEDY2 = FIELD << {n1.flag1.setTrue}.
+
+||GREEDY3 = FIELD >> {n2.flag2.setTrue}.

@@ -1,0 +1,30 @@
+const True = 1
+const False = 0
+range Bool = False..True
+
+set BoolActions = {setTrue,setFalse,[False],[True]}
+
+BOOLVAR = VAL[False],
+VAL[v:Bool] = ( setTrue -> VAL[True]
+                | setFalse -> VAL[False]
+                | [v] -> VAL[v]
+              ).
+||FLAGS = (flag1:BOOLVAR||flag2:BOOLVAR).
+
+NEIGHBOR1 = (flag1.setTrue -> TEST),
+TEST = ( flag2[b:Bool]-> if b then (flag1.setFalse -> NEIGHBOR1)
+                         else (enter -> exit -> flag1.setFalse -> NEIGHBOR1)
+       )+{{flag1, flag2}.BoolActions}.
+
+NEIGHBOR2 = (flag2.setTrue -> TEST),
+TEST = ( flag1[b:Bool]-> if b then (flag2.setFalse -> NEIGHBOR2)
+                         else (enter -> exit -> flag2.setFalse -> NEIGHBOR2)
+       )+{{flag1, flag2}.BoolActions}.
+
+||FIELD = (n1:NEIGHBOR1 || n2:NEIGHBOR2 || {n1,n2}::FLAGS).
+
+||GREEDY = FIELD << {{n1,n2}.{flag1,flag2}.setTrue}.
+
+||GREEDY2 = FIELD << {n1.flag1.setTrue}.
+
+||GREEDY3 = FIELD >> {n2.flag2.setTrue}.
