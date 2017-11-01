@@ -5,33 +5,47 @@
 
 const N = 5
 
-PHIL = (sitdown->right.get->left.get
-          ->eat->left.put->right.put
-          ->arise->PHIL).
+PHIL(ID = 0) = (sitdown[ID] -> getr[ID] -> getl[ID]
+                -> eat[ID] -> putl[ID] -> putr[ID]
+                -> arise[ID] -> PHIL).
 
-FORK = (get -> put -> FORK).
+FORK0 = (getl[0] -> putl[0] -> FORK0
+         | getl[4] -> putl[4] -> FORK0).
+FORK1 = (getl[1] -> putl[1] -> FORK1
+         | getl[0] -> putl[0] -> FORK1).
+FORK2 = (getl[2] -> putl[2] -> FORK2
+         | getl[1] -> putl[1] -> FORK2).
+FORK3 = (getl[3] -> putl[3] -> FORK3
+         | getl[2] -> putl[2] -> FORK3).
+FORK4 = (getl[4] -> putl[4] -> FORK4
+         | getl[3] -> putl[3] -> FORK4).
 
-||DINERS(N=5)= 
-   forall [i:0..N-1] 
-   (phil[i]:PHIL 
-   ||{phil[i].left,phil[((i-1)+N)%N].right}::FORK).
-
-||PHIL0 = (phil[0]:PHIL || {phil[0].left, phil[4].right}::FORK).
-||PHIL1 = (phil[1]:PHIL || {phil[1].left, phil[0].right}::FORK).
-||PHIL2 = (phil[2]:PHIL || {phil[2].left, phil[1].right}::FORK).
-||PHIL3 = (phil[3]:PHIL || {phil[3].left, phil[2].right}::FORK).
-||PHIL4 = (phil[4]:PHIL || {phil[4].left, phil[3].right}::FORK).
+||PHIL0 = (PHIL(0) || FORK0).
+||PHIL1 = (PHIL(1) || FORK1).
+||PHIL2 = (PHIL(2) || FORK2).
+||PHIL3 = (PHIL(3) || FORK3).
+||PHIL4 = (PHIL(4) || FORK4).
 
 ||EATERS = (PHIL0 || PHIL1 || PHIL2 || PHIL3 || PHIL4).  //equiv to DINERS(N=5)
 
 const Max = 3
 range Int = 0..N-1
-
+range P = 0..4
 //The "butler" in the assignment - stole it from chapter 5
 SEMAPHORE(N=0) = SEMA[N],
-SEMA[v:Int]    = (when(v < N) up->SEMA[v+1]
-                 |when(v>0) down->SEMA[v-1]
-                 ).
+SEMA[v:Int]    = (when(v < N) arise[P] ->SEMA[v+1]
+                 |when(v > 0) sitdown[p:P] -> sitdownack[p] ->SEMA[v-1]
+                 |when(v == 0) sitdown[p:P] -> SEMA1[p]),
+SEMA1[p:P] = (arise[P] -> sitdownack[p] -> SEMA[0]
+              | sitdown[q:P] -> SEMA2[p][q]),
+SEMA2[p:P][q:P] = (arise[P] -> sitdownack[p] -> SEMA1[q]
+              | sitdown[p] -> ERROR).
 
-||SEMA_DINERS = (DINERS || phil[0..N-1]::SEMAPHORE(N-1))/
-					{phil[i:0..N-1].sitdown/phil[i].down, phil[i:0..N-1].arise/phil[i].up}.
+
+||WHOLE_THING = (EATERS || SEMAPHORE(3)).
+
+
+fluent AT_TABLE0 = <sitdownack[0], arise[0]>
+fluent AT_TABLE1 = <sitdownack[1], arise[1]>
+
+assert NOT01 = []!(AT_TABLE0 && AT_TABLE1)

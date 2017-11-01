@@ -11,22 +11,23 @@ CONTROL[p:0..M] = ( when(p < M) passanger -> CONTROL[p+1]
                     | when(p == M) pick_up -> CONTROL[0]
                   ).
 
-TOKEN = TOKEN[1][1],
-TOKEN[i:1..M][b:Bool] = ( when (b == True) [i].pick_up -> TOKEN[i][False]
-                          | [i].arrive -> TOKEN[(i%M)+1][True]
-                        ).
+TOKEN = TOKEN[1],
+TOKEN[i:1..M] = ( [i].get_token -> [i].release_token -> TOKEN[(i%M)+1]).
 
-CAR = (pick_up -> riding_and_bonding -> arrive -> form_social_group -> CAR).
-
+CAR = (get_token -> pick_up -> riding_and_bonding -> arrive -> form_social_group -> release_token -> CAR).
 
 ||ROLLER = (TURNSTILE || Cars::CONTROL || Cars:CAR || TOKEN)/{passanger /Cars.passanger}.
 
+fluent RIDING[a:Cars] = <[a].pick_up, [a].arrive>
+fluent HASTOKEN[a:Cars] = <[a].get_token, [a].release_token>
 
 //No more than one car is riding at any time
+assert NOT_1_2 = []!(RIDING[1] && RIDING[2])
+assert NOT_2_3 = []!(RIDING[2] && RIDING[3])
+assert NOT_1_3 = []!(RIDING[1] && RIDING[3])
 
 //A car must obtain a token before riding
+assert TOKENRIDE = [](!RIDING[a:Cars] U HASTOKEN[a:Cars])
 
 //A car gives up it's token after riding
-
-
-
+assert LIVELINESS = []([a:Cars].get_token -> <>[a:Cars].release_token)

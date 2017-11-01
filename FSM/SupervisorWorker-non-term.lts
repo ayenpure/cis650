@@ -1,0 +1,67 @@
+/** Concurrency: State Models and Java Programs
+ *             Jeff Magee and Jeff Kramer
+ *  
+ */
+
+/* Supervisor Worker - with incorrect termination
+*/
+
+const False = 0
+const True  = 1
+range Bool = False..True
+
+const N          = 2                  //Maximum Number of tuple copies    
+set   Tuples     = {task,result,stop}
+set   TupleAlpha = {{in,out,rd,rdp[Bool],inp[Bool]}.Tuples}
+
+
+TUPLE(T='any) = TUPLE[0],
+TUPLE[i:0..N] 
+  = (out[T]                   -> TUPLE[i+1] //inserts tuple T into bag
+    |when (i>0) in[T]         -> TUPLE[i-1] //extracts tuple T from bag
+    |when (i>0) inp[True][T]  -> TUPLE[i-1] //nonblocking tuple exists
+    |when (i==0)inp[False][T] -> TUPLE[i]   //nonblocking tuple does not exits
+    |when (i>0) rd[T]         -> TUPLE[i]   //rd blocking
+    |rdp[i>0][T]              -> TUPLE[i]   //rdp non-blocking
+    ).
+
+||TUPLESPACE = forall [t:Tuples] TUPLE(t).
+
+SUPERVISOR   = TASK[1],
+TASK[i:1..N] = 
+  (out.task  -> 
+     if i<N then TASK[i+1] else RESULT[1]),
+RESULT[i:1..N] = 
+  (in.result -> 
+     if i<N then RESULT[i+1] else FINISH),
+FINISH  = 
+  (out.stop  -> end -> STOP) + TupleAlpha.
+
+
+WORKER = 
+  (rdp[b:Bool].stop-> 
+    if (!b) then
+      (inp[c:Bool].task -> if c then (out.result -> WORKER) 
+                           else WORKER) //This is a blocking in??
+    else
+      (end -> STOP)
+  )+TupleAlpha .
+
+ATEND  = (end  ->ENDED),
+ENDED = (ended->ENDED).
+
+||SUPERVISOR_WORKER
+     = (supervisor:SUPERVISOR || 
+       {redWork,blueWork}:WORKER
+       ||{supervisor,redWork,blueWork}::TUPLESPACE||ATEND)
+       /{end/{supervisor,redWork,blueWork}.end}.
+
+progress END = {ended}
+menu TEST = {redWork,blueWork}.in.task
+
+fluent REDWORKING = <redWork.inp[True].task, redWork.out.result>
+fluent BLUEWORKING = <blueWork.inp[True].task, blueWork.out.result>
+
+//assert TEST = []!(REDWORKING && BLUEWORKING)
+//assert LAST_TO_STOP = (!supervisor.out.stop U redWork.end)
+assert LAST_TO_STOP = (!end U supervisor.out.stop)
