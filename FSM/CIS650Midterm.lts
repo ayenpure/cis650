@@ -1,0 +1,46 @@
+/** Concurrency: State Models and Java Programs
+ *             Jeff Magee and Jeff Kramer
+ *  
+ */
+const N = 5
+range PhilID = 0..N-1
+const False = 0
+const True = 1
+range Bool = False..True 
+
+
+PHIL(ID=0,NID=0) = (start-> if (ID == 0) then PHIL[True]
+                            else PHIL[False]),
+PHIL[tok:Bool] = (when(tok == True) sitdown -> right.get-> left.get -> eat 
+                                    -> left.put ->right.put -> arise -> pass_token[NID] ->PHIL[False]
+                  | when(tok == False) pass_token[ID] -> PHIL[True]
+                 ).
+
+FORK = (get -> put -> FORK).
+
+||DINERS(N=5)= 
+   forall [i:PhilID] 
+   (phil[i]:PHIL(i,(i+1)%N)
+   ||{phil[i].left,phil[((i-1)+N)%N].right}::FORK
+   )/{start /phil[i].start,
+      pass_token /phil[i].pass_token}.
+   
+||PHIL0 = (phil[0]:PHIL || {phil[0].left, phil[4].right}::FORK).
+||PHIL1 = (phil[1]:PHIL || {phil[1].left, phil[0].right}::FORK).
+||PHIL2 = (phil[2]:PHIL || {phil[2].left, phil[1].right}::FORK).
+||PHIL3 = (phil[3]:PHIL || {phil[3].left, phil[2].right}::FORK).
+||PHIL4 = (phil[4]:PHIL || {phil[4].left, phil[3].right}::FORK).
+
+||EATERS = (PHIL0 || PHIL1 || PHIL2 || PHIL3 || PHIL4).  //equiv to DINERS(N=5)
+
+const Max = 3
+range Int = 0..N-1
+
+//The "butler" in the assignment - stole it from chapter 5
+SEMAPHORE(N=0) = SEMA[N],
+SEMA[v:Int]    = (when(v < N) up->SEMA[v+1]
+                 |when(v>0) down->SEMA[v-1]
+                 ).
+
+||SEMA_DINERS = (DINERS || phil[0..N-1]::SEMAPHORE(N-1))/
+                 {phil[i:0..N-1].sitdown /phil[i].down, phil[i:0..N-1].arise /phil[i].up}.
