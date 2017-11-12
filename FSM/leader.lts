@@ -1,0 +1,39 @@
+const True = 1
+const False = 0
+range Bool = False..True
+range IDS = 0..2
+
+PNODE(ID=0, NID=0) = MAIN[False],
+MAIN[f:Bool] = (
+                 when(!f) send_id[NID][ID] -> MAIN[True]
+                 | receive_id[ID][k:IDS] -> log_deciding[ID] -> DECIDE[k][f]
+                 | receive_leader[ID][k:IDS] -> send_leader[NID][k] -> WORKING[k]
+               ),
+DECIDE[k:IDS][f:Bool] = (
+                          when(k<ID) log_drop[ID][k] -> MAIN[f] 
+                          | when(k>ID) send_id[NID][k] -> BOWOUT
+                          | when(k==ID) log_i_am_leader[ID] -> ANNOUNCE 
+                        ),
+BOWOUT = (
+           receive_id[ID][k:IDS] -> send_id[NID][k] -> BOWOUT
+           | receive_leader[ID][k:IDS] -> send_leader[NID][k] -> WORKING[k]
+         ),
+ANNOUNCE = (send_leader[NID][ID] -> WAITFORROUNDTRIP),
+WAITFORROUNDTRIP = (receive_leader[ID][ID] -> log_all_informed[ID] -> WORKING[ID]),
+WORKING[k:IDS] = (log_do_real_work[ID][k] -> IDLE),
+IDLE = (log_waiting[ID] -> IDLE).
+
+||RING=(PNODE(0,1) || PNODE(1,2) || PNODE(2,0))/{send_id/receive_id, send_leader/receive_leader}.
+
+const Total = 12
+MSGCOUNTER = COUNTER[Total][0],
+COUNTER[i:0..Total][w:0..3] = (
+                                send_id[IDS][IDS] -> COUNTER[i-1][w]
+                                | send_leader[IDS][IDS] -> COUNTER[i-1][w]
+                                | log_do_real_work[IDS][IDS] -> COUNTER[i][w+1]
+                                | when(w==3) final_count[i] -> COUNTER[i][w]
+                              )+{send_id[IDS][IDS], send_leader[IDS][IDS], log_do_real_work[IDS][IDS]}.
+
+|| RING2 = (RING || MSGCOUNTER).
+
+assert COUNTS = []!final_count[4]
